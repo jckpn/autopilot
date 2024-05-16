@@ -5,14 +5,13 @@ import imutils
 import numpy as np
 from tensorflow import keras
 
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 class Model:
-    saved_model = "autopilot.h5"
-
     def __init__(self):
-        self.model = keras.models.load_model(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_model)
-        )
+        model_name = "autopilot.h5"  # Change this to your model name
+        self.model = keras.models.load_model(os.path.join(CURRENT_DIR, model_name))
         self.model.summary()
 
     def preprocess(self, image):
