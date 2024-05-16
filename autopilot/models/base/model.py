@@ -9,9 +9,9 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class Model:
-    def __init__(self):
-        model_name = "autopilot.h5"  # Change this to your model name
-        self.model = keras.models.load_model(os.path.join(CURRENT_DIR, model_name))
+    def __init__(self, model_name="autopilot.h5"):
+        model_path = os.path.join(CURRENT_DIR, model_name)
+        self.model = keras.models.load_model(model_path)
         self.model.summary()
 
     def preprocess(self, image):
