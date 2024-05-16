@@ -1,22 +1,24 @@
-from tensorflow import keras
-import numpy as np
-import imutils
-import cv2
 import os
+
+import cv2
+import imutils
+import numpy as np
+from tensorflow import keras
 
 
 class Model:
-
-    saved_model = 'autopilot.h5'
+    saved_model = "autopilot.h5"
 
     def __init__(self):
-        self.model = keras.models.load_model(os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_model))
+        self.model = keras.models.load_model(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_model)
+        )
         self.model.summary()
 
     def preprocess(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2YUV) / 255.0
         image = imutils.resize(image, width=80)
-        image = image[int(image.shape[0] / 4):, :, :]
+        image = image[int(image.shape[0] / 4) :, :, :]
         return image
 
     def predict(self, image):

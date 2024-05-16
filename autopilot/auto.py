@@ -4,19 +4,32 @@
 .. moduleauthor:: Adam Moss <adam.moss@nottingham.ac.uk>
 """
 
-import threading
-import importlib
-from autopilot.settings import api_settings
 import collections
-import cv2
-import time
+import importlib
 import logging
+import threading
+import time
+
+import cv2
+
+from autopilot.settings import api_settings
 
 
 class AutoPilot:
-
-    def __init__(self, capture=None, front_wheels=None, back_wheels=None, camera_control=None,
-                 debug=False, mode='drive', model=None, width=320, height=240, capture_src="/dev/video0", max_speed=35):
+    def __init__(
+        self,
+        capture=None,
+        front_wheels=None,
+        back_wheels=None,
+        camera_control=None,
+        debug=False,
+        mode="drive",
+        model=None,
+        width=320,
+        height=240,
+        capture_src="/dev/video0",
+        max_speed=35,
+    ):
         """
 
         :param capture:
@@ -33,15 +46,16 @@ class AutoPilot:
 
         try:
             from art import text2art
+
             print(text2art("MLiS AutoPilot"))
         except ModuleNotFoundError:
-            print('MLiS AutoPilot')
+            print("MLiS AutoPilot")
 
-        assert mode in ['test', 'camera', 'drive', 'ludicrous', 'plaid']
+        assert mode in ["test", "camera", "drive", "ludicrous", "plaid"]
 
         # Try getting camera from already running capture object, otherwise get a new CV2 video capture object
-        if mode != 'test':
-            if capture is not None and hasattr(capture, 'camera'):
+        if mode != "test":
+            if capture is not None and hasattr(capture, "camera"):
                 self.camera = capture.camera
             else:
                 self.camera = cv2.VideoCapture(capture_src)
@@ -83,11 +97,11 @@ class AutoPilot:
         # NN Model
         if model is None:
             model = api_settings.MODEL
-        print('Using %s model' % model)
-        logging.info('Using %s model' % model)
-        module = importlib.import_module('autopilot.models.%s.model' % model)
+        print("Using %s model" % model)
+        logging.info("Using %s model" % model)
+        module = importlib.import_module("autopilot.models.%s.model" % model)
         self.model = module.Model()
-        logging.info('Loaded model')
+        logging.info("Loaded model")
 
     def start(self):
         """
@@ -95,7 +109,7 @@ class AutoPilot:
         :return:
         """
         if self._started:
-            print('[!] Self driving has already been started')
+            print("[!] Self driving has already been started")
             return None
         self._started = True
         self._terminate = False
@@ -126,7 +140,7 @@ class AutoPilot:
         Separate thread to continually update latest frame
         :return:
         """
-        if self.mode == 'test':
+        if self.mode == "test":
             while not self._terminate:
                 frame = cv2.imread(api_settings.TEST_IMAGE)
                 self.current_frame.append(frame)
@@ -147,9 +161,7 @@ class AutoPilot:
         :return:
         """
         while not self._terminate:
-
             if len(self.current_frame) > 0:
-
                 frame = self.current_frame.pop()
                 start_time = time.time()
                 angle, speed = self.model.predict(frame)
@@ -161,24 +173,35 @@ class AutoPilot:
 
                 if self.debug:
                     if len(self.inference_times) > 0:
-                        mean_inference_time = sum(self.inference_times) / len(self.inference_times)
+                        mean_inference_time = sum(self.inference_times) / len(
+                            self.inference_times
+                        )
                     else:
                         mean_inference_time = inference_time
-                    print('Inference time {0:0.2f} ms, mean {1:0.2f} ms'.format(inference_time, mean_inference_time))
-                    print('Angle: {0}, Speed: {1}'.format(angle, speed))
+                    print(
+                        "Inference time {0:0.2f} ms, mean {1:0.2f} ms".format(
+                            inference_time, mean_inference_time
+                        )
+                    )
+                    print("Angle: {0}, Speed: {1}".format(angle, speed))
 
-                if self.mode == 'test':
+                if self.mode == "test":
+                    assert (
+                        70 <= angle <= 110
+                    ), "The angle is not realistic for the test image"
+                    assert (
+                        20 <= speed <= 35
+                    ), "The speed is not realistic for the test image"
 
-                    assert 70 <= angle <= 110, "The angle is not realistic for the test image"
-                    assert 20 <= speed <= 35, "The speed is not realistic for the test image"
-
-                elif self.mode in ['drive', 'ludicrous', 'plaid']:
-
+                elif self.mode in ["drive", "ludicrous", "plaid"]:
                     # Do not allow angle or speed to go out of allowed range
-                    angle = max(min(angle, self.front_wheels._max_angle), self.front_wheels._min_angle)
-                    if self.mode == 'ludicrous':
+                    angle = max(
+                        min(angle, self.front_wheels._max_angle),
+                        self.front_wheels._min_angle,
+                    )
+                    if self.mode == "ludicrous":
                         speed = 50
-                    elif self.mode == 'plaid':
+                    elif self.mode == "plaid":
                         speed = 100
 
                     # Set picar angle and speed
