@@ -2,7 +2,7 @@
 
 Template code for the AutoPilot self-driving software on the PiCar. 
 
-![alt text](https://github.com/adammoss/autopilot/blob/main/test.png?raw=true)
+![Example capture of PiCar camera](https://github.com/adammoss/autopilot/blob/main/example_capture.png?raw=true)
 
 ## Installation
 
