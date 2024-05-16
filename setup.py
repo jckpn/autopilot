@@ -1,15 +1,10 @@
 import setuptools
-import os
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-
-def readfile(filename):
-    with open(filename, encoding="utf-8") as fp:
-        filecontents = fp.read()
-    return filecontents
-
+with open("requirements.txt", "r") as f:
+    requirements = f.read().splitlines()
 
 setuptools.setup(
     name="autopilot",
@@ -20,9 +15,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    install_requires=readfile(
-        os.path.join(os.path.dirname(__file__), "requirements.txt")
-    ),
+    install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
