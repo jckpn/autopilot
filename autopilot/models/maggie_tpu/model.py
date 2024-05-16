@@ -13,28 +13,30 @@ class Model:
     def __init__(self):
         os.environ["TF_XLA_FLAGS"] = "--tf_xla_enable_xla_devices"  # enable gpu
 
-        try:  # attempt to load model on TPU
-            delegate = tf.lite.experimental.load_delegate("libedgetpu.so.1")
+        model_path = os.path.join(CURRENT_DIR, "maggie_model.tflite")
 
+        try:
+            # attempt to load model on TPU
             print("Using TPU")
             self.interpreter = tf.lite.Interpreter(
-                model_path=os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), self.my_model
-                ),
-                experimental_delegates=[delegate],
+                model_path,
+                experimental_delegates=[
+                    tf.lite.experimental.load_delegate("libedgetpu.so.1"),
+                    # Works for Linux - use "libedgetpu.1.dylib" if testing on macOS
+                ],
             )
+            print(f"Using EdgeTPU for {model_path}")
 
-        except ValueError:
-            print("Fallback to CPU")
-            self.interpreter = tf.lite.Interpreter(
-                model_path=os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), self.my_model
-                )
-            )
+        except Exception as e:
+            # fallback to CPU if TPU not available
+            print(f"Error loading EdgeTPU: {e}")
+            self.interpreter = tf.lite.Interpreter(model_path)
+            print(f"Using CPU for {model_path}")
+
         self.interpreter.allocate_tensors()
-
-        self.input_details = self.interpreter.get_input_details()
-        self.output_details = self.interpreter.get_output_details()
+        self.input_index = self.interpreter.get_input_details()[0]["index"]
+        self.speed_output_index = self.interpreter.get_output_details()[0]["index"]
+        self.angle_output_index = self.interpreter.get_output_details()[1]["index"]
 
     def preprocess(self, image):
         # im = tf.image.convert_image_dtype(image, tf.float32)
@@ -44,15 +46,16 @@ class Model:
         return im
 
     def predict(self, image):
+        # Preprocess image and set as input tensor
         image = self.preprocess(image)
+        self.interpreter.set_tensor(self.input_details, image)
 
-        self.interpreter.set_tensor(
-            self.input_details[0]["index"], image
-        )  # original might work
+        # Run model and get output tensors
         self.interpreter.invoke()
+        pred_speed = self.interpreter.get_tensor(self.speed_output_index)[0]
+        pred_angle = self.interpreter.get_tensor(self.angle_output_index)[0]
 
-        pred_speed = self.interpreter.get_tensor(self.output_details[0]["index"])[0]
-        pred_angle = self.interpreter.get_tensor(self.output_details[1]["index"])[0]
+        # Post-process outputs (model uses normalised data)
         speed = np.around(pred_speed[0]).astype(int) * 35
         angle = pred_angle[0] * 80 + 50
 
