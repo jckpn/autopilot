@@ -24,7 +24,7 @@ if __name__ == "__main__":
     front_wheels = None
     back_wheels = None
     if args.mode in ["drive", "ludicrous", "plaid"]:
-        print("Using config file %s" % args.picar_config)
+        print(f"Using config file {args.picar_config}")
         try:
             import picar
 

@@ -97,9 +97,9 @@ class AutoPilot:
         # NN Model
         if model is None:
             model = api_settings.MODEL
-        print("Using %s model" % model)
-        logging.info("Using %s model" % model)
-        module = importlib.import_module("autopilot.models.%s.model" % model)
+        print(f"Using {model} model")
+        logging.info(f"Using {model} model")
+        module = importlib.import_module(f"autopilot.models.{model}.model")
         self.model = module.Model()
         logging.info("Loaded model")
 

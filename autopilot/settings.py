@@ -24,7 +24,7 @@ class APISettings:
         elif attr in self.__dict__["defaults"]:
             val = self.__dict__["defaults"][attr]
         else:
-            raise AttributeError("Invalid API setting: '%s'" % attr)
+            raise AttributeError(f"Invalid API setting: {attr}")
         return val
 
 
